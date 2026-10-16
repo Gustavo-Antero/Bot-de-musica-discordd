@@ -1,0 +1,10 @@
+{
+  "name": "discord-music-bot",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Bot de musica para Discord com comandos slash e painel minimalista.",
+  "type": "module",
+  "scripts": { "start": "node src/index.js", "register": "node src/deploy-commands.js" },
+  "engines": { "node": ">=20.11.0" },
+  "dependencies": { "@discordjs/voice": "^0.18.0", "discord.js": "^14.21.0", "dotenv": "^16.6.1", "play-dl": "^1.9.7" }
+}
