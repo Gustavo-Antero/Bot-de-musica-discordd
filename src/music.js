@@ -1,5 +1,6 @@
-import { createAudioPlayer, createAudioResource, entersState, joinVoiceChannel, NoSubscriberBehavior, StreamType, VoiceConnectionStatus, AudioPlayerStatus } from '@discordjs/voice';
+import { createAudioPlayer, createAudioResource, demuxProbe, entersState, joinVoiceChannel, NoSubscriberBehavior, StreamType, VoiceConnectionStatus, AudioPlayerStatus } from '@discordjs/voice';
 import play from 'play-dl';
+import ytdlp from 'youtube-dl-exec';
 
 const queues = new Map();
 const MAX_QUEUE = 100;
@@ -58,15 +59,30 @@ async function playNext(queue) {
   const next = queue.tracks.shift();
   if (!next) { queue.current = null; return; }
   queue.current = next;
+  let extractor;
   try {
-    const source = await play.stream(next.url, { quality: 2 });
+    extractor = ytdlp.exec(next.url, {
+      format: 'bestaudio[acodec=opus]/bestaudio',
+      output: '-',
+      noPlaylist: true,
+      quiet: true,
+      noWarnings: true,
+    });
+    // The child process is a thenable; attach a handler while the voice player consumes stdout.
+    const extractorResult = extractor.then(() => null, (error) => {
+      console.error(`[${queue.guildId}] yt-dlp falhou em ${next.url}:`, error.stderr || error.message);
+      return null;
+    });
+    const source = await demuxProbe(extractor.stdout);
     const resource = createAudioResource(source.stream, { inputType: source.type ?? StreamType.Arbitrary, inlineVolume: true, metadata: next });
     resource.volume.setVolume(queue.volume);
     queue.player.play(resource);
+    void extractorResult;
   } catch (error) {
-    console.error(`[${queue.guildId}] Falha na faixa:`, error.message);
+    if (extractor && !extractor.killed) extractor.kill();
+    console.error(`[${queue.guildId}] Falha ao abrir ${next.url}:`, error.stderr || error.message);
     queue.current = null;
-    queue.textChannel?.send(`Falha ao abrir **${next.title}**; pulando para a próxima.`).catch(() => {});
+    queue.textChannel?.send(`Não consegui abrir **${next.title}** no YouTube; pulei para a próxima faixa.`).catch(() => {});
     await playNext(queue);
   }
 }
