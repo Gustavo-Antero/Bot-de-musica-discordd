@@ -1,10 +1,10 @@
 # Bot de música para Discord
 
-Bot em Node.js com comandos slash, fila por servidor e painel minimalista com botões e seletor de volume. A busca e os links usam YouTube via `play-dl`.
+Bot em Node.js com comandos slash, fila por servidor e painel minimalista com botões e seletor de volume. A busca usa `play-dl`; a extração do áudio usa `yt-dlp` por meio do pacote `youtube-dl-exec`, que baixa o executável durante a instalação.
 
 ## Requisitos
 
-- Node.js 20.11 ou mais recente e pnpm (ou npm).
+- Node.js 20.11 ou mais recente e pnpm (ou npm). O pacote `youtube-dl-exec` pode precisar de Python 3.9+ para executar o `yt-dlp`, conforme a plataforma.
 - Uma aplicação e um bot criados no [Discord Developer Portal](https://discord.com/developers/applications).
 - Para áudio em voz, o servidor precisa permitir conexões de voz e o processo precisa ter acesso à internet.
 
